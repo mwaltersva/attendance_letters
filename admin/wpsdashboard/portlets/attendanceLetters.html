@@ -1,6 +1,96 @@
 <h2>Students Needing Attendance Letters</h2>
 <div>
-    Select students needing: <a href="#">5 Day Letters</a>&nbsp;<a href="#">10 Day Letters</a>
+    Select students needing: <a href="/admin/studentlist/functions.html?ac=buildsel;table=students;list=~[tlist_sql;
+            SELECT
+                dcid
+            FROM (
+                SELECT
+                    schl.name schoolname,
+                    s.dcid,
+                    s.lastfirst,
+                    s.grade_level,
+                    count(s.id) absences,
+                    CASE WHEN (
+                        SELECT l.id
+                        FROM log l
+                        WHERE
+                            l.studentid = s.id AND
+                            l.entry_date BETWEEN t.firstday AND t.lastday AND
+                            l.subtype = '5 Day Letter'
+                    ) IS NOT NULL THEN 'Y' END status5Day,
+                    CASE WHEN (
+                        SELECT l.id
+                        FROM log l
+                        WHERE
+                            l.studentid = s.id AND
+                            l.entry_date BETWEEN t.firstday AND t.lastday AND
+                            l.subtype = '10 Day Letter'
+                    ) IS NOT NULL THEN 'Y' END status10Day
+                FROM students s
+                JOIN schools schl ON schl.school_number = s.schoolid
+                JOIN ps_adaadm_defaults_all ada ON ada.studentid = s.id
+                JOIN terms t ON ada.calendardate BETWEEN t.firstday AND t.lastday AND t.schoolid = s.schoolid
+                WHERE
+                    t.isyearrec = 1 AND
+                    t.yearid = ~(curyearid) AND
+                    ada.attendancevalue = 0 AND
+                    ada.membershipvalue > 0 AND
+                    s.enroll_status = 0
+                    ~[if.is.a.school]AND s.schoolid = ~(curschoolid)[/if]
+                GROUP BY schl.name, s.dcid, s.lastfirst, s.id, s.grade_level, s.id, t.firstday, t.lastday, s.schoolid
+                HAVING count(s.id) >= 5
+                ORDER BY s.lastfirst ASC
+            ) ls
+            WHERE
+                absences BETWEEN 5 AND 9 AND
+                status5day IS NULL AND
+                status10day IS NULL
+        ;]~(dcid)%2C[/tlist_sql]">5 Day Letters</a>&nbsp;<a href="/admin/studentlist/functions.html?ac=buildsel;table=students;list=~[tlist_sql;
+            SELECT
+                dcid
+            FROM (
+                SELECT
+                    schl.name schoolname,
+                    s.dcid,
+                    s.lastfirst,
+                    s.grade_level,
+                    count(s.id) absences,
+                    CASE WHEN (
+                        SELECT l.id
+                        FROM log l
+                        WHERE
+                            l.studentid = s.id AND
+                            l.entry_date BETWEEN t.firstday AND t.lastday AND
+                            l.subtype = '5 Day Letter'
+                    ) IS NOT NULL THEN 'Y' END status5Day,
+                    CASE WHEN (
+                        SELECT l.id
+                        FROM log l
+                        WHERE
+                            l.studentid = s.id AND
+                            l.entry_date BETWEEN t.firstday AND t.lastday AND
+                            l.subtype = '10 Day Letter'
+                    ) IS NOT NULL THEN 'Y' END status10Day
+                FROM students s
+                JOIN schools schl ON schl.school_number = s.schoolid
+                JOIN ps_adaadm_defaults_all ada ON ada.studentid = s.id
+                JOIN terms t ON ada.calendardate BETWEEN t.firstday AND t.lastday AND t.schoolid = s.schoolid
+                WHERE
+                    t.isyearrec = 1 AND
+                    t.yearid = ~(curyearid) AND
+                    ada.attendancevalue = 0 AND
+                    ada.membershipvalue > 0 AND
+                    s.enroll_status = 0
+                    ~[if.is.a.school]AND s.schoolid = ~(curschoolid)[/if]
+                GROUP BY schl.name, s.dcid, s.lastfirst, s.id, s.grade_level, s.id, t.firstday, t.lastday, s.schoolid
+                HAVING count(s.id) >= 5
+                ORDER BY s.lastfirst ASC
+            ) ls
+            WHERE
+                absences > 9 AND
+                status5day IS NULL AND
+                status10day IS NULL
+        ;]~(dcid)%2C[/tlist_sql]">10 Day Letters</a>
 </div>
 <table class="grid">
     <thead>
